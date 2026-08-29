@@ -3,7 +3,7 @@ import time
 from google import genai
 import telebot
 
-# Token va kalitlarni to'g'ridan-to'g'ri Railway Variables'dan olamiz
+# Token va kalitlarni Railway Variables muhitidan o'qib olamiz
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
@@ -155,7 +155,7 @@ def handle_video(message):
 
 
 if __name__ == "__main__":
-  print("Bot muhit o'zgaruvchilari bilan muvaffaqiyatli ishga tushdi...")
+  print("Bot toza token bilan muvaffaqiyatli ishga tushdi...")
   while True:
     try:
       bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
