@@ -3,7 +3,7 @@ import time
 from google import genai
 import telebot
 
-TELEGRAM_TOKEN = "8657456868:AAHeypCVp-qfofC8x_cBjWI4asApHiJuN4M".strip()
+TELEGRAM_TOKEN = "8657456868:AAGOlRnObuTCc1nW7U7ItjxRtSZMXgPHKiw".strip()
 GEMINI_API_KEY = "AIzaSyBM_v1JRCoMgMmtrXexSz_Ft1ps2g34Vlc".strip()
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
@@ -148,7 +148,7 @@ def handle_video(message):
 
 
 if __name__ == "__main__":
-  print("Bot mukammal rejimda ishga tushdi...")
+  print("Bot yangi token bilan mukammal ishga tushdi...")
   while True:
     try:
       bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
