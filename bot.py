@@ -1,15 +1,17 @@
 import os
 import time
-from google import genai
+import google.generativeai as genai
 import telebot
 
 TELEGRAM_TOKEN = "8657456868:AAHeypCVp-qfofC8x_cBjWI4asApHiJuN4M".strip()
 GEMINI_API_KEY = (
-    "AQ.Ab8RN6IsNjeQeQoG2qfLXKt7RbH6qmrATiiQvbEfApGQHxdGwA".strip()
+    "AQ.Ab8RN6LnLgjddJdCceWzCo9ihSDlB91QcQk4UdWt0YVDXGbJ5w".strip()
 )
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-client = genai.Client(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
+
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 SYSTEM_PROMPT = """
 Sen SBD ERP.0 (https://isbd.uz/sbd-erp) korxona resurslarini rejalashtirish dasturining aqlli yordamchi assistentisan.
@@ -29,10 +31,8 @@ def send_welcome(message):
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
   try:
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=f"{SYSTEM_PROMPT}\n\nFoydalanuvchi savoli: {message.text}",
-    )
+    prompt = f"{SYSTEM_PROMPT}\n\nFoydalanuvchi savoli: {message.text}"
+    response = model.generate_content(prompt)
     bot.reply_to(
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
@@ -50,17 +50,15 @@ def handle_voice(message):
     with open(voice_path, "wb") as f:
       f.write(downloaded_file)
 
-    audio_file = client.files.upload(file=voice_path)
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[
-            audio_file,
-            (
-                f"{SYSTEM_PROMPT}\n\nUshbu ovozli xabarni tingla va"
-                " foydalanuvchining savoliga o'zbek tilida qisqa javob ber."
-            ),
-        ],
-    )
+    audio_file = genai.upload_file(voice_path)
+    prompt = [
+        audio_file,
+        (
+            f"{SYSTEM_PROMPT}\n\nUshbu ovozli xabarni tingla va"
+            " foydalanuvchining savoliga o'zbek tilida qisqa javob ber."
+        ),
+    ]
+    response = model.generate_content(prompt)
     bot.reply_to(
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
@@ -83,21 +81,18 @@ def handle_photo(message):
     with open(photo_path, "wb") as f:
       f.write(downloaded_file)
 
-    image_file = client.files.upload(file=photo_path)
+    image_file = genai.upload_file(photo_path)
     caption_text = (
         message.caption if message.caption else "Rasmni tahlil qil"
     )
-
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[
-            image_file,
-            (
-                f"{SYSTEM_PROMPT}\n\nFoydalanuvchi rasmni yubordi. Izoh:"
-                f" {caption_text}. Tahlil qilib javob yoz."
-            ),
-        ],
-    )
+    prompt = [
+        image_file,
+        (
+            f"{SYSTEM_PROMPT}\n\nFoydalanuvchi rasmni yubordi. Izoh:"
+            f" {caption_text}. Tahlil qilib javob yoz."
+        ),
+    ]
+    response = model.generate_content(prompt)
     bot.reply_to(
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
@@ -125,17 +120,15 @@ def handle_video(message):
     with open(video_path, "wb") as f:
       f.write(downloaded_file)
 
-    video_file = client.files.upload(file=video_path)
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=[
-            video_file,
-            (
-                f"{SYSTEM_PROMPT}\n\nFoydalanuvchi videoni yubordi. Holatni"
-                " tahlil qilib javob ber."
-            ),
-        ],
-    )
+    video_file = genai.upload_file(video_path)
+    prompt = [
+        video_file,
+        (
+            f"{SYSTEM_PROMPT}\n\nFoydalanuvchi videoni yubordi. Holatni"
+            " tahlil qilib javob ber."
+        ),
+    ]
+    response = model.generate_content(prompt)
     bot.reply_to(
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
@@ -150,7 +143,7 @@ def handle_video(message):
 
 
 if __name__ == "__main__":
-  print("Bot matnli va multimedia javob berish rejimida ishga tushdi...")
+  print("Bot eski formatdagi barqaror rejimda ishga tushdi...")
   while True:
     try:
       bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
