@@ -3,7 +3,6 @@ import time
 from google import genai
 import telebot
 
-# Token va kalit to'g'ridan-to'g'ri yozilgan
 TELEGRAM_TOKEN = "8657456868:AAEAgeXPol6p0zJCsBc9JbKsxlXN1j3DKEk".strip()
 GEMINI_API_KEY = "AIzaSyBM_v1JRCoMgMmtrXexSz_Ft1ps2g34Vlc".strip()
 
@@ -28,7 +27,6 @@ def send_welcome(message):
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
   try:
-    # Model nomi gemini-2.0-flash ga o'zgartirildi
     response = client.models.generate_content(
         model="gemini-2.0-flash",
         contents=f"{SYSTEM_PROMPT}\n\nFoydalanuvchi savoli: {message.text}",
@@ -37,10 +35,9 @@ def handle_text(message):
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
   except Exception as e:
-    print(f"TEXT XATOLIGI: {e}")
-    bot.reply_to(
-        message, f"Kechirasiz, sun'iy intellektda xatolik yuz berdi. 🤖"
-    )
+    print(f"XATOLIK: {e}")
+    # Aniq xatolikni Telegramda ko'rsatamiz
+    bot.reply_to(message, f"❌ Xatolik yuz berdi:\n{str(e)}")
 
 
 @bot.message_handler(content_types=["voice"])
@@ -67,10 +64,7 @@ def handle_voice(message):
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
   except Exception as e:
-    print(f"VOICE XATOLIGI: {e}")
-    bot.reply_to(
-        message, "Kechirasiz, ovozli xabarni o'qishda xatolik yuz berdi. 🤖"
-    )
+    bot.reply_to(message, f"❌ Ovozli xatolik:\n{str(e)}")
   finally:
     if os.path.exists(voice_path):
       os.remove(voice_path)
@@ -104,10 +98,7 @@ def handle_photo(message):
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
   except Exception as e:
-    print(f"PHOTO XATOLIGI: {e}")
-    bot.reply_to(
-        message, "Kechirasiz, rasmni tahlil qilishda xatolik yuz berdi. 🤖"
-    )
+    bot.reply_to(message, f"❌ Rasm xatoligi:\n{str(e)}")
   finally:
     if os.path.exists(photo_path):
       os.remove(photo_path)
@@ -142,17 +133,14 @@ def handle_video(message):
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
   except Exception as e:
-    print(f"VIDEO XATOLIGI: {e}")
-    bot.reply_to(
-        message, "Kechirasiz, videoni tahlil qilishda xatolik yuz berdi. 🤖"
-    )
+    bot.reply_to(message, f"❌ Video xatoligi:\n{str(e)}")
   finally:
     if os.path.exists(video_path):
-      os.path.exists(video_path) and os.remove(video_path)
+      os.remove(video_path)
 
 
 if __name__ == "__main__":
-  print("Bot yangi model bilan ishga tushdi...")
+  print("Bot xatoliklarni chiqarish rejimi bilan ishga tushdi...")
   while True:
     try:
       bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
