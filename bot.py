@@ -1,6 +1,5 @@
 import os
 import time
-from gTTS import gTTS
 import google.generativeai as genai
 import telebot
 
@@ -20,34 +19,12 @@ Sening vazifang foydalanuvchilarning savollariga o'zbek tilida qisqa, aniq va tu
 """
 
 
-def send_voice_reply(message, text_response):
-  audio_path = "reply_voice.ogg"
-  try:
-    tts = gTTS(text=text_response, lang="uz", slow=False)
-    tts.save(audio_path)
-
-    with open(audio_path, "rb") as audio:
-      bot.send_voice(
-          message.chat.id, audio, reply_to_message_id=message.message_id
-      )
-
-    bot.reply_to(
-        message, f"📝 *Matnli javob:* \n{text_response}", parse_mode="Markdown"
-    )
-  except Exception as e:
-    print(f"Ovoz chiqarishda xatolik: {e}")
-    bot.reply_to(message, text_response)
-  finally:
-    if os.path.exists(audio_path):
-      os.remove(audio_path)
-
-
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
   bot.reply_to(
       message,
       "Assalomu alaykum! SBD ERP.0 yordamchi botiga xush kelibsiz. Menga istalgan"
-      " savolni yuboring, ovozli javob qaytaraman! 🎙️",
+      " savolni yuboring, javob beraman! 🤖",
   )
 
 
@@ -56,7 +33,9 @@ def handle_text(message):
   try:
     prompt = f"{SYSTEM_PROMPT}\n\nFoydalanuvchi savoli: {message.text}"
     response = model.generate_content(prompt)
-    send_voice_reply(message, response.text)
+    bot.reply_to(
+        message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
+    )
   except Exception as e:
     print(f"Xatolik: {e}")
     bot.reply_to(message, "Kechirasiz, xatolik yuz berdi. 🤖")
@@ -80,7 +59,9 @@ def handle_voice(message):
         ),
     ]
     response = model.generate_content(prompt)
-    send_voice_reply(message, response.text)
+    bot.reply_to(
+        message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
+    )
   except Exception as e:
     print(f"Ovozli xatolik: {e}")
     bot.reply_to(
@@ -112,7 +93,9 @@ def handle_photo(message):
         ),
     ]
     response = model.generate_content(prompt)
-    send_voice_reply(message, response.text)
+    bot.reply_to(
+        message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
+    )
   except Exception as e:
     print(f"Rasm xatoligi: {e}")
     bot.reply_to(
@@ -146,7 +129,9 @@ def handle_video(message):
         ),
     ]
     response = model.generate_content(prompt)
-    send_voice_reply(message, response.text)
+    bot.reply_to(
+        message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
+    )
   except Exception as e:
     print(f"Video xatoligi: {e}")
     bot.reply_to(
@@ -158,7 +143,7 @@ def handle_video(message):
 
 
 if __name__ == "__main__":
-  print("Bot ovozli javob berish rejimida ishga tushdi...")
+  print("Bot matnli javob berish rejimida ishga tushdi...")
   while True:
     try:
       bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
