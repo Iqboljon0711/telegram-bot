@@ -1,18 +1,36 @@
 import os
 import time
-from google import genai
+import requests
 import telebot
 
 TELEGRAM_TOKEN = "8657456868:AAEAgeXPol6p0zJCsBc9JbKsxlXN1j3DKEk".strip()
-GEMINI_API_KEY = "AIzaSyBM_v1JRCoMgMmtrXexSz_Ft1ps2g34Vlc".strip()
+GEMINI_API_KEY = (
+    "AQ.Ab8RN6LdoSMwqsolpf4JgQjSnnqhHpgvNSLpdTg_nTglAY_u8g".strip()
+)
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
-client = genai.Client(api_key=GEMINI_API_KEY)
 
 SYSTEM_PROMPT = """
 Sen SBD ERP.0 (https://isbd.uz/sbd-erp) korxona resurslarini rejalashtirish dasturining aqlli yordamchi assistentisan.
 Sening vazifang foydalanuvchilarning savollariga o'zbek tilida qisqa, aniq va tushunarli javob berish.
 """
+
+
+def ask_gemini(prompt_text):
+  try:
+    # To'g'ridan-to'g'ri Gemini API'ga so'rov yuborish (token turidan qat'iy nazar ishlaydi)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+    headers = {"Content-Type": "application/json"}
+    data = {
+        "contents": [{
+            "parts": [{"text": f"{SYSTEM_PROMPT}\n\nSavol: {prompt_text}"}]
+        }]
+    }
+    response = requests.post(url, headers=headers, json=data, timeout=30)
+    res_json = response.json()
+    return res_json["candidates"][0]["content"]["parts"][0]["text"]
+  except Exception as e:
+    return f"Xatolik yuz berdi: {str(e)}"
 
 
 @bot.message_handler(commands=["start"])
@@ -26,121 +44,12 @@ def send_welcome(message):
 
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
-  try:
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=f"{SYSTEM_PROMPT}\n\nFoydalanuvchi savoli: {message.text}",
-    )
-    bot.reply_to(
-        message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
-    )
-  except Exception as e:
-    print(f"XATOLIK: {e}")
-    # Aniq xatolikni Telegramda ko'rsatamiz
-    bot.reply_to(message, f"❌ Xatolik yuz berdi:\n{str(e)}")
-
-
-@bot.message_handler(content_types=["voice"])
-def handle_voice(message):
-  voice_path = "voice_msg.ogg"
-  try:
-    file_info = bot.get_file(message.voice.file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-    with open(voice_path, "wb") as f:
-      f.write(downloaded_file)
-
-    audio_file = client.files.upload(file=voice_path)
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=[
-            audio_file,
-            (
-                f"{SYSTEM_PROMPT}\n\nUshbu ovozli xabarni tingla va"
-                " foydalanuvchining savoliga o'zbek tilida qisqa javob ber."
-            ),
-        ],
-    )
-    bot.reply_to(
-        message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
-    )
-  except Exception as e:
-    bot.reply_to(message, f"❌ Ovozli xatolik:\n{str(e)}")
-  finally:
-    if os.path.exists(voice_path):
-      os.remove(voice_path)
-
-
-@bot.message_handler(content_types=["photo"])
-def handle_photo(message):
-  photo_path = "photo_msg.jpg"
-  try:
-    file_info = bot.get_file(message.photo[-1].file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-    with open(photo_path, "wb") as f:
-      f.write(downloaded_file)
-
-    image_file = client.files.upload(file=photo_path)
-    caption_text = (
-        message.caption if message.caption else "Rasmni tahlil qil"
-    )
-
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=[
-            image_file,
-            (
-                f"{SYSTEM_PROMPT}\n\nFoydalanuvchi rasmni yubordi. Izoh:"
-                f" {caption_text}. Tahlil qilib javob yoz."
-            ),
-        ],
-    )
-    bot.reply_to(
-        message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
-    )
-  except Exception as e:
-    bot.reply_to(message, f"❌ Rasm xatoligi:\n{str(e)}")
-  finally:
-    if os.path.exists(photo_path):
-      os.remove(photo_path)
-
-
-@bot.message_handler(content_types=["video_note", "video"])
-def handle_video(message):
-  video_path = "video_msg.mp4"
-  try:
-    file_id = (
-        message.video_note.file_id
-        if message.content_type == "video_note"
-        else message.video.file_id
-    )
-    file_info = bot.get_file(file_id)
-    downloaded_file = bot.download_file(file_info.file_path)
-    with open(video_path, "wb") as f:
-      f.write(downloaded_file)
-
-    video_file = client.files.upload(file=video_path)
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=[
-            video_file,
-            (
-                f"{SYSTEM_PROMPT}\n\nFoydalanuvchi videoni yubordi. Holatni"
-                " tahlil qilib javob ber."
-            ),
-        ],
-    )
-    bot.reply_to(
-        message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
-    )
-  except Exception as e:
-    bot.reply_to(message, f"❌ Video xatoligi:\n{str(e)}")
-  finally:
-    if os.path.exists(video_path):
-      os.remove(video_path)
+  answer = ask_gemini(message.text)
+  bot.reply_to(message, f"📝 *Javob:* \n{answer}", parse_mode="Markdown")
 
 
 if __name__ == "__main__":
-  print("Bot xatoliklarni chiqarish rejimi bilan ishga tushdi...")
+  print("Bot HTTP so'rovlar rejimi bilan ishga tushdi...")
   while True:
     try:
       bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
