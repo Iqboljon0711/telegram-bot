@@ -1,4 +1,3 @@
-pytelegrambotapi
-google-genai
+pyTelegramBotAPI
+google-generativeai
 gTTS
-requests
