@@ -3,15 +3,9 @@ import time
 from google import genai
 import telebot
 
-# Token va kalitlarni Railway Variables muhitidan o'qib olamiz
-TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN", "").strip()
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-
-if not TELEGRAM_TOKEN or not GEMINI_API_KEY:
-  raise ValueError(
-      "TELEGRAM_TOKEN yoki GEMINI_API_KEY topilmadi! Railway Variables"
-      " bo'limini tekshiring."
-  )
+# Token va kalit to'g'ridan-to'g'ri yozilgan
+TELEGRAM_TOKEN = "8657456868:AAEAgeXPol6p0zJCsBc9JbKsxlXN1j3DKEk".strip()
+GEMINI_API_KEY = "AIzaSyBM_v1JRCoMgMmtrXexSz_Ft1ps2g34Vlc".strip()
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -155,7 +149,7 @@ def handle_video(message):
 
 
 if __name__ == "__main__":
-  print("Bot toza token bilan muvaffaqiyatli ishga tushdi...")
+  print("Bot to'g'ridan-to'g'ri kalitlar bilan muvaffaqiyatli ishga tushdi...")
   while True:
     try:
       bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
