@@ -28,16 +28,19 @@ def send_welcome(message):
 @bot.message_handler(content_types=["text"])
 def handle_text(message):
   try:
+    # Model nomi gemini-2.0-flash ga o'zgartirildi
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-2.0-flash",
         contents=f"{SYSTEM_PROMPT}\n\nFoydalanuvchi savoli: {message.text}",
     )
     bot.reply_to(
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
   except Exception as e:
-    print(f"Xatolik: {e}")
-    bot.reply_to(message, "Kechirasiz, xatolik yuz berdi. 🤖")
+    print(f"TEXT XATOLIGI: {e}")
+    bot.reply_to(
+        message, f"Kechirasiz, sun'iy intellektda xatolik yuz berdi. 🤖"
+    )
 
 
 @bot.message_handler(content_types=["voice"])
@@ -51,7 +54,7 @@ def handle_voice(message):
 
     audio_file = client.files.upload(file=voice_path)
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-2.0-flash",
         contents=[
             audio_file,
             (
@@ -64,7 +67,7 @@ def handle_voice(message):
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
   except Exception as e:
-    print(f"Ovozli xatolik: {e}")
+    print(f"VOICE XATOLIGI: {e}")
     bot.reply_to(
         message, "Kechirasiz, ovozli xabarni o'qishda xatolik yuz berdi. 🤖"
     )
@@ -88,7 +91,7 @@ def handle_photo(message):
     )
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-2.0-flash",
         contents=[
             image_file,
             (
@@ -101,7 +104,7 @@ def handle_photo(message):
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
   except Exception as e:
-    print(f"Rasm xatoligi: {e}")
+    print(f"PHOTO XATOLIGI: {e}")
     bot.reply_to(
         message, "Kechirasiz, rasmni tahlil qilishda xatolik yuz berdi. 🤖"
     )
@@ -126,7 +129,7 @@ def handle_video(message):
 
     video_file = client.files.upload(file=video_path)
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-2.0-flash",
         contents=[
             video_file,
             (
@@ -139,20 +142,20 @@ def handle_video(message):
         message, f"📝 *Javob:* \n{response.text}", parse_mode="Markdown"
     )
   except Exception as e:
-    print(f"Video xatoligi: {e}")
+    print(f"VIDEO XATOLIGI: {e}")
     bot.reply_to(
         message, "Kechirasiz, videoni tahlil qilishda xatolik yuz berdi. 🤖"
     )
   finally:
     if os.path.exists(video_path):
-      os.remove(video_path)
+      os.path.exists(video_path) and os.remove(video_path)
 
 
 if __name__ == "__main__":
-  print("Bot to'g'ridan-to'g'ri kalitlar bilan muvaffaqiyatli ishga tushdi...")
+  print("Bot yangi model bilan ishga tushdi...")
   while True:
     try:
       bot.infinity_polling(skip_pending=True, timeout=60, long_polling_timeout=60)
     except Exception as e:
-      print(f"Xatolik yuz berdi: {e}")
+      print(f"Polling xatoligi: {e}")
       time.sleep(5)
